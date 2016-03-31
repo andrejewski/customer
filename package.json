@@ -21,5 +21,14 @@
   "bugs": {
     "url": "https://github.com/andrejewski/customer/issues"
   },
-  "homepage": "https://github.com/andrejewski/customer#readme"
+  "homepage": "https://github.com/andrejewski/customer#readme",
+  "dependencies": {
+    "bluebird": "^3.3.4",
+    "co": "^4.6.0",
+    "ejs": "^2.4.1",
+    "mkdirp": "^0.5.1",
+    "ncp": "^2.0.0",
+    "rimraf": "^2.5.2",
+    "underscore.string": "^3.3.4"
+  }
 }
