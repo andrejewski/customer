@@ -17,13 +17,11 @@ module.exports = function build(dest, api) {
     api.options.errors = [];
     writes.push(template('error', path.join(dest, 'errors.js')));
 
-    writes.push(template('request', path.join(dest, 'request.js')));
-    
     writes.push(template('index', path.join(dest, 'index.js')));
-    api.resources.forEach(function(resource) {
-      var filepath = path.join(dest, 'resources', resource.noun, 'index.js');
-      writes.push(template('resource', filepath, {resource: resource}));
-    });
+    // api.resources.forEach(function(resource) {
+    //   var filepath = path.join(dest, 'resources', resource.noun, 'index.js');
+    //   writes.push(template('resource', filepath, {resource: resource}));
+    // });
 
     yield writes;
   });

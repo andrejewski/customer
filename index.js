@@ -1,7 +1,7 @@
 
 function Api(name, options) {
   if(!(this instanceof Api)) {
-    return new Api(options);
+    return new Api(name, options);
   }
 
   if(typeof name !== 'string') {
@@ -12,6 +12,7 @@ function Api(name, options) {
     throw new Error('Api option "baseUrl" string required (so not an option really)');
   }
 
+  this.name = name;
   this.options = options || {};
   this.resources = [];
   this.actions = [];
@@ -33,7 +34,7 @@ Api.prototype.hasMany = function(resources) {
     if(!resources.hasOwnProperty(key)) continue;
     var res = resources[key];
     if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun'".belongsTo() passed a non-resource '+res);
+      throw new Error('Resource "'+noun+'".belongsTo() passed a non-resource '+res);
     }
     if(this.resources.indexOf(res) === -1) {
       this.resources.push(res);
@@ -48,7 +49,7 @@ Api.prototype.static = function(actions) {
     if(!actions.hasOwnProperty(key)) continue;
     var action = actions[key];
     if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun'".belongsTo() passed a non-action '+action);
+      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
     }
     if(this.actions.indexOf(action) === -1) {
       this.actions.push(action);
@@ -59,7 +60,7 @@ Api.prototype.static = function(actions) {
 
 function Action(name, method, verb, options) {
   if(!(this instanceof Action)) {
-    return new Action(method, verb, options);
+    return new Action(name, method, verb, options);
   }
 
   if(typeof name !== 'string') {
@@ -129,7 +130,7 @@ Resource.prototype.hasMany = function hasMany(resources) {
     if(!resources.hasOwnProperty(key)) continue;
     var res = resources[key];
     if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun'".hasMany() passed a non-resource '+res);
+      throw new Error('Resource "'+noun+'".hasMany() passed a non-resource '+res);
     }
     if(this.children.indexOf(res) === -1) {
       this.children.push(res);
@@ -144,7 +145,7 @@ Resource.prototype.belongsTo = function belongsTo(resources) {
     if(!resources.hasOwnProperty(key)) continue;
     var res = resources[key];
     if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun'".belongsTo() passed a non-resource '+res);
+      throw new Error('Resource "'+noun+'".belongsTo() passed a non-resource '+res);
     }
     if(this.parents.indexOf(res) === -1) {
       this.parents.push(res);
@@ -159,7 +160,7 @@ Resource.prototype.static = function(actions) {
     if(!actions.hasOwnProperty(key)) continue;
     var action = actions[key];
     if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun'".belongsTo() passed a non-action '+action);
+      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
     }
     if(this.statics.indexOf(action) === -1) {
       this.statics.push(action);
@@ -174,7 +175,7 @@ Resource.prototype.method = function(actions) {
     if(!actions.hasOwnProperty(key)) continue;
     var action = actions[key];
     if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun'".belongsTo() passed a non-action '+action);
+      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
     }
     if(this.methods.indexOf(action) === -1) {
       this.methods.push(action);

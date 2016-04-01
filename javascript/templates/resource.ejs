@@ -1,0 +1,83 @@
+
+var request = require('superagent');
+var Containers = require('../../container');
+var Resource = require('../../resource');
+
+function <%= _.classify(resource.noun) %>() {
+  return Resource.apply(this, arguments);
+}
+
+<% resource.parents.forEach(function(parent) { %>
+<%= _.classify(resource.noun) %>.prototype.<%= parent.noun %> = function <%= parent.noun %>(<%= resource.noun %>Id, options, callback) {
+  var response = this.api.send(request
+    .get('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id+'/<%= parent.noun %>')
+    .query(options));
+  var container = Containers.Default;
+  response = response.then(container.bind(api));
+  if(callback) Promise.asCallback(callback);
+  return response;
+}
+<% }); %>
+
+<% resource.children.forEach(function(child) { %>
+<%= _.classify(resource.noun) %>.prototype.<%= child.noun %> = function <%= _.pluralize(child.noun) %>(<%= resource.noun %>Id, options, callback) {
+  var response = this.api.send(request
+    .get('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id+'/<%= _.pluralize(child.noun) %>')
+    .query(options));
+  var container = Containers.Cursor;
+  response = response.then(container.bind(api));
+  if(callback) Promise.asCallback(callback);
+  return response;
+}
+<% }); %>
+
+<% resource.statics.forEach(function(action) { %>
+<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.noun %>(options, callback) {
+  var req = request
+    <% if(action.verb) { %>
+    .<%= action.method %>('/<%= _.pluralize(resource.noun) %>/<%= action.verb %>')
+    <% } else { %>
+    .<%= action.method %>('/<%= _.pluralize(resource.noun) %>')
+    <% } %>
+    <% if(action.method === 'get') { %>
+    .query(options);
+    <% } else { %>
+    .send(options);
+    <% } %>
+  var response = this.api.send(req);
+  <% if(action.options.container) { %>
+  var container = Containers.<%= _.classify(action.options.container) %>;
+  <% } else { %>
+  var container = Containers.Default;
+  <% } %>
+  response = response.then(container.bind(api));
+  if(callback) Promise.asCallback(callback);
+  return response;
+}
+<% }); %>
+
+<% resource.statics.forEach(function(action) { %>
+<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.noun %>(<%= resource.noun %>Id, options, callback) {
+  var req = request
+    <% if(action.verb) { %>
+    .<%= action.method %>('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id+'/<%= action.verb %>')
+    <% } else { %>
+    .<%= action.method %>('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id)
+    <% } %>
+    <% if(action.method === 'get') { %>
+    .query(options);
+    <% } else { %>
+    .send(options);
+    <% } %>
+  var response = this.api.send(req);
+  <% if(action.options.container) { %>
+  var container = Containers.<%= _.classify(action.options.container) %>;
+  <% } else { %>
+  var container = Containers.Default;
+  <% } %>
+  response = response.then(container.bind(api));
+  if(callback) Promise.asCallback(callback);
+  return response;
+}
+<% }); %>
+

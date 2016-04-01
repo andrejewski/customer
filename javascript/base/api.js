@@ -2,7 +2,9 @@
 var Request = require('./request');
 
 function Api(apiKey, baseUrl) {
-  if(!(this instanceof Api)) return new Api();
+  if(!(this instanceof Api)) {
+    return new Api(apiKey, baseUrl);
+  }
   this.apiKey = apiKey;
   this.baseUrl = baseUrl;
   this.configRequest();

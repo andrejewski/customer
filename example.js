@@ -20,14 +20,14 @@ var Repo = Resource('repo', {});
 
 User
   .belongsTo(Org)
-  .hasMany(Repo);
-  .read();
+  .hasMany(Repo)
+  .read()
   .update();
 
 Org
   .belongsTo(User)
   .hasMany(User)
-  .hasMany(Repo);
+  .hasMany(Repo)
   .crud();
 
 Repo.crud();

@@ -1,0 +1,26 @@
+
+function <%= _.classify(api.name) %>Error(message) {
+  this.name = "<%= _.classify(api.name) %>Error";
+  this.message = message;
+  this.stack = (new Error()).stack;
+}
+<%= _.classify(api.name) %>Error.prototype = Object.create(Error.prototype);
+<%= _.classify(api.name) %>Error.prototype.constructor = <%= _.classify(api.name) %>Error;
+
+<% api.options.errors.forEach(function(error) { %>
+function <%= _.classify(api.name)+_.classify(error) %>Error(message) {
+  this.name = "<%= _.classify(api.name)+_.classify(error) %>Error";
+  this.message = message;
+  this.stack = (new Error()).stack;
+}
+<%= _.classify(api.name)+_.classify(error) %>Error.prototype = Object.create(Error.prototype);
+<%= _.classify(api.name)+_.classify(error) %>Error.prototype.constructor = <%= _.classify(api.name)+_.classify(error) %>Error;
+<% }); %>
+
+module.exports = {
+  <%= _.classify(api.name) %>Error: <%= _.classify(api.name) %>Error,
+  <% api.options.errors.forEach(function(error) { %>
+    <%= _.classify(api.name)+_.classify(error) %>Error: <%= _.classify(api.name)+_.classify(error) %>Error,
+  <% }); %>
+};
+

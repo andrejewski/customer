@@ -1,6 +1,8 @@
 
 var path = require('path');
 var underscoreString = require('underscore.string');
+var pluralize = require('pluralize');
+underscoreString.pluralize = pluralize;
 
 var Promise = require('bluebird');
 var fs = Promise.promisifyAll(require('fs'));
@@ -14,7 +16,8 @@ function clean(dir) {
 }
 
 function clone(src, dest) {
-  return Promise.series([mkdirp(src), ncp(src, dest)]);
+  return Promise.each([mkdirp(src), ncp(src, dest)], 
+                      function(x) {return x;});
 }
 
 function template(dir, shared) {
@@ -23,11 +26,12 @@ function template(dir, shared) {
 
   function write(filepath, data) {
     var dir = path.dirname(filepath);
-    return Promise.each([mkdirp(dir), fs.writeFile(filepath, data)]);
+    return Promise.each([mkdirp(dir), fs.writeFileAsync(filepath, data)],
+                        function(x) {return x;});
   }
 
   function render(sourcePath, template, data) {
-    var locals = Object.assign({}, shared, data);
+    var locals = Object.assign({}, helpers, shared, data);
     return ejs.render(template, locals, {filename: sourcePath});
   }
 
@@ -40,7 +44,7 @@ function template(dir, shared) {
       return write(filepath, text);
     }
 
-    var file = fs.readFile(path.join(dir, template), {encoding: 'utf8'});
+    var file = fs.readFileAsync(path.join(dir, template), {encoding: 'utf8'});
     return file.then(function(file) {
       templateCache[template] = file;
       var text = render(sourcePath, file, locals);
@@ -48,4 +52,10 @@ function template(dir, shared) {
     });
   }
 }
+
+module.exports = {
+  clean: clean,
+  clone: clone,
+  template: template,
+};
 

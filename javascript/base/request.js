@@ -1,5 +1,6 @@
 
-var Errors = require('./errors');
+var Promise = require('bluebird');
+var Errors = require('./error');
 
 function prefix(prefix) {
     return function (request) {
