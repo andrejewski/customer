@@ -4,7 +4,10 @@ var Containers = require('../../container');
 var Resource = require('../../resource');
 
 function <%= _.classify(resource.noun) %>() {
-  return Resource.apply(this, arguments);
+  if(!(this instanceof <%= _.classify(resource.noun) %>)) {
+    return new (<%= _.classify(resource.noun) %>.bind.apply(<%= _.classify(resource.noun) %>, arguments));
+  }
+  Resource.apply(this, arguments);
 }
 
 <% resource.parents.forEach(function(parent) { %>
@@ -20,7 +23,7 @@ function <%= _.classify(resource.noun) %>() {
 <% }); %>
 
 <% resource.children.forEach(function(child) { %>
-<%= _.classify(resource.noun) %>.prototype.<%= child.noun %> = function <%= _.pluralize(child.noun) %>(<%= resource.noun %>Id, options, callback) {
+<%= _.classify(resource.noun) %>.prototype.<%= _.pluralize(child.noun) %> = function <%= _.pluralize(child.noun) %>(<%= resource.noun %>Id, options, callback) {
   var response = this.api.send(request
     .get('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id+'/<%= _.pluralize(child.noun) %>')
     .query(options));
@@ -32,7 +35,7 @@ function <%= _.classify(resource.noun) %>() {
 <% }); %>
 
 <% resource.statics.forEach(function(action) { %>
-<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.noun %>(options, callback) {
+<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.name %>(options, callback) {
   var req = request
     <% if(action.verb) { %>
     .<%= action.method %>('/<%= _.pluralize(resource.noun) %>/<%= action.verb %>')
@@ -57,7 +60,7 @@ function <%= _.classify(resource.noun) %>() {
 <% }); %>
 
 <% resource.statics.forEach(function(action) { %>
-<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.noun %>(<%= resource.noun %>Id, options, callback) {
+<%= _.classify(resource.noun) %>.prototype.<%= action.name %> = function <%= action.name %>(<%= resource.noun %>Id, options, callback) {
   var req = request
     <% if(action.verb) { %>
     .<%= action.method %>('/<%= _.pluralize(resource.noun) %>/'+<%= resource.noun %>Id+'/<%= action.verb %>')

@@ -45,7 +45,8 @@ co(function*() {
   for(var key in languages) {
     if(!languages.hasOwnProperty(key)) continue;
     var language = languages[key];
-    yield require('../'+language)(destPath, customerJson);
+    var libPath = path.join(destPath, language);
+    yield require('../'+language)(libPath, customerJson);
   }
 }).then(function() {
     console.log('Customer library builds completed with no error.');

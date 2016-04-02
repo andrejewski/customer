@@ -18,10 +18,10 @@ module.exports = function build(dest, api) {
     writes.push(template('error', path.join(dest, 'errors.js')));
 
     writes.push(template('index', path.join(dest, 'index.js')));
-    // api.resources.forEach(function(resource) {
-    //   var filepath = path.join(dest, 'resources', resource.noun, 'index.js');
-    //   writes.push(template('resource', filepath, {resource: resource}));
-    // });
+    api.resources.forEach(function(resource) {
+      var filepath = path.join(dest, 'resources', resource.noun+'.js');
+      writes.push(template('resource', filepath, {resource: resource}));
+    });
 
     yield writes;
   });

@@ -1,7 +1,40 @@
 
 var Api = require('./api');
-
-module.exports = function <% _.classify(api.name) %>(apiKey) {
-  return Api(apiKey, "<% api.options.baseUrl %>");
+<% if(api.actions.length) { %>
+var request = require('superagent');
+var Containers = require('./container');
+<% } %>
+module.exports = function <%= _.classify(api.name) %>(apiKey) {
+  if(!(this instanceof <%= _.classify(api.name) %>)) {
+    return new <%= _.classify(api.name) %>(apiKey);
+  }
+  Api.call(this, apiKey, "<%= api.options.baseUrl %>");
+  <% api.resources.forEach(function(resource) { %>
+  var <%= _.classify(resource.noun) %> = require('./resources/<%= resource.noun %>');
+  Api.<%= _.classify(resource.noun) %> = <%= _.classify(resource.noun) %>("<%= resource.noun %>", this);
+  <% }); %>
 }
-
+<% api.actions.forEach(function(action) { %>
+<%= _.classify(api.name) %>.prototype.<%= action.name %> = function <%= action.name %>(options, callback) {
+  var req = request
+    <% if(action.verb) { %>
+    .<%= action.method %>('/<%= action.verb %>')
+    <% } else { %>
+    .<%= action.method %>('/')
+    <% } %>
+    <% if(action.method === 'get') { %>
+    .query(options);
+    <% } else { %>
+    .send(options);
+    <% } %>
+  var response = this.api.send(req);
+  <% if(action.options.container) { %>
+  var container = Containers.<%= _.classify(action.options.container) %>;
+  <% } else { %>
+  var container = Containers.Default;
+  <% } %>
+  response = response.then(container.bind(api));
+  if(callback) Promise.asCallback(callback);
+  return response;
+}
+<% }); %>
