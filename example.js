@@ -28,6 +28,8 @@ Org
   .belongsTo(User)
   .hasMany(User)
   .hasMany(Repo)
+  .method(Crud.create)
+  .method(Refund, 'refund')
   .crud();
 
 Repo.crud();

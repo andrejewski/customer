@@ -13,9 +13,14 @@ function Api(name, options) {
   }
 
   this.name = name;
-  this.options = options || {};
+  this.options = options;
   this.resources = [];
   this.actions = [];
+}
+
+Api.prototype.use = function(func, options) {
+  func(this, options);
+  return this;
 }
 
 Api.prototype.toObject = function() {
@@ -28,33 +33,35 @@ Api.prototype.toObject = function() {
   };
 }
 
-Api.prototype.hasMany = function(resources) {
-  if(!Array.isArray(resources)) resources = [resources];
-  for(var key in resources) {
-    if(!resources.hasOwnProperty(key)) continue;
-    var res = resources[key];
-    if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".belongsTo() passed a non-resource '+res);
-    }
-    if(this.resources.indexOf(res) === -1) {
-      this.resources.push(res);
-    }
+Api.prototype.resource = function(resource) {
+  if(!(resource instanceof Resource)) {
+    var msg = 'Api '+this.name+'.resource() not passed a customer.Resource.';
+    throw new Error(msg);
   }
+  var existing = this.resources
+    .filter(function(x) {return x.name === resource.name})
+    .pop();
+  if(existing) {
+    var msg = 'Api '+this.name+'.resource('+resource.name+') conflicts with another resource named "'+existing name+'".';
+    throw new Error(msg);
+  }
+  this.resources.push(resource);
   return this;
 }
 
-Api.prototype.static = function(actions) {
-  if(!Array.isArray(actions)) actions = [actions];
-  for(var key in actions) {
-    if(!actions.hasOwnProperty(key)) continue;
-    var action = actions[key];
-    if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
-    }
-    if(this.actions.indexOf(action) === -1) {
-      this.actions.push(action);
-    }
+Api.prototype.action = function(action) {
+  if(!(action instanceof Action)) {
+    var msg = 'Api '+this.name+'.action() not passed a customer.Action.';
+    throw new Error(msg);
   }
+  var existing = this.actions
+    .filter(function(x) {return x.name === action.name})
+    .pop();
+  if(existing) {
+    var msg = 'Api '+this.name+'.action('+action.name+') conflicts with another action named "'+existing name+'".';
+    throw new Error(msg);
+  }
+  this.actions.push(action);
   return this;
 }
 
@@ -87,127 +94,121 @@ Action.prototype.toObject = function() {
   };
 }
 
-var Crud = {
-  create: Action('create', 'post', null),
-  list: Action('list', 'get', null, {cursor: true}),
+var Crud = (function() {
+  var create = Action('create', 'post', null);
+  var list = Action('list', 'get', null, {container: 'cursor'});
+  var read = Action('read', 'get', null);
+  var update = Action('update', 'put', null);
+  var del = Action('delete', 'delete', null);
   
-  read: Action('read', 'get', null),
-  update: Action('update', 'put', null),
-  delete: Action('delete', 'delete', null),
-};
+  function Crud(resource) {
+    resource
+      .static(create)
+      .static(list)
+      .method(read)
+      .method(update)
+      .method(del);
+  }
 
-function Resource(noun, options) {
+  Crud.create = create;
+  Crud.list = list;
+  Crud.read = read;
+  Crud.update = update;
+  Crud.delete = del;
+
+  return Crud;
+}).call(this);
+
+function Resource(name, options) {
   if(!(this instanceof Resource)) {
-    return new Resource(noun, options);
+    return new Resource(name, options);
   }
   
-  if(typeof noun !== 'string') {
+  if(typeof name !== 'string') {
     throw new Error('Resource name required.');
   }
 
-  this.noun = noun;
+  this.name = name;
   this.options = options || {};
-  this.parents = [];
-  this.children = [];
+  this.singleRelations = [];
+  this.multipleRelations = [];
   this.statics = [];
   this.methods = [];
+}
+
+Resource.prototype.use = function(func, options) {
+  func(this, options);
+  return this;
 }
 
 Resource.prototype.toObject = function() {
   return {
     type: 'resource',
-    noun: this.noun,
-    parents: this.parents,
-    children: this.children,
+    name: this.name,
+    singleRelations: this.singleRelations,
+    multipleRelations: this.multipleRelations,
     statics: this.statics,
     methods: this.methods,
   };
 }
 
-Resource.prototype.hasMany = function hasMany(resources) {
-  if(!Array.isArray(resources)) resources = [resources];
-  for(var key in resources) {
-    if(!resources.hasOwnProperty(key)) continue;
-    var res = resources[key];
-    if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".hasMany() passed a non-resource '+res);
-    }
-    if(this.children.indexOf(res) === -1) {
-      this.children.push(res);
-    }
+Resource.prototype._addRelation = function addRelation(prop, func, resource, name) {
+  name = name || resource.name;
+  if(!(resource instanceof Resource)) {
+    var msg = 'Resource '+this.name+'.'+func+'() not passed a customer.Resource.';
+    throw new Error(msg);
   }
+
+  var existing = this[prop]
+    .filter(function(x) {return x.name === name});
+    .pop();
+  if(existing) {
+    var msg = 'Conflicting '+this.name+'.'+func+'('+resource.name+', '+name+') relation with name "'+name+'".';
+    throw new Error(msg);
+  }
+  this[prop].push({name: name, resource: resource});
+}
+
+Resource.prototype.hasMany = function hasMany(resource, name) {
+  this._addRelation('multipleRelations', 'hasMany', resource, name);
   return this;
 }
 
-Resource.prototype.belongsTo = function belongsTo(resources) {
-  if(!Array.isArray(resources)) resources = [resources];
-  for(var key in resources) {
-    if(!resources.hasOwnProperty(key)) continue;
-    var res = resources[key];
-    if(!(res instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".belongsTo() passed a non-resource '+res);
-    }
-    if(this.parents.indexOf(res) === -1) {
-      this.parents.push(res);
-    }
-  }
+Resource.prototype.hasOne = function hasOne(resource, name) {
+  this._addRelation('singleRelations', 'hasOne', resource, name);
   return this;
 }
 
-Resource.prototype.static = function(actions) {
-  if(!Array.isArray(actions)) actions = [actions];
-  for(var key in actions) {
-    if(!actions.hasOwnProperty(key)) continue;
-    var action = actions[key];
-    if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
-    }
-    if(this.statics.indexOf(action) === -1) {
-      this.statics.push(action);
-    }
+Resource.prototype._addAction = function addAction(prop, func, action, name) {
+  var name = name || action.name;
+  if(!(action instanceof Action)) {
+    var msg = 'Resource '+this.name+'.'+func+'() not passed a customer.Action.';
+    throw new Error(msg);
   }
+
+  var existing = this[prop]
+    .filter(function(x) {return x.name === name;})
+    .pop();
+  if(existing) {
+    var msg = 'Resource '+this.name+'.'+func+'('+action.name+', '+name+') conflict on name "'+name+'".';
+    throw new Error(msg);
+  }
+
+  this[prop].push({
+    name: name,
+    action: action,
+  });
+}
+
+Resource.prototype.static = function static(action, name) {
+  this._addAction('statics', 'static', action, name);
   return this;
 }
 
-Resource.prototype.method = function(actions) {
-  if(!Array.isArray(actions)) actions = [actions];
-  for(var key in actions) {
-    if(!actions.hasOwnProperty(key)) continue;
-    var action = actions[key];
-    if(!(action instanceof Resource)) {
-      throw new Error('Resource "'+noun+'".belongsTo() passed a non-action '+action);
-    }
-    if(this.methods.indexOf(action) === -1) {
-      this.methods.push(action);
-    }
-  }
+Resource.prototype.method = function method(action, name) {
+  this._addAction('methods', 'method', action, name);
   return this;
 }
-
-var statics = ['create', 'list'];
-statics.forEach(function(fn) {
-  Resource.prototype[fn] = function(options) {
-    this.statics[fn] = Crud[fn];
-    return this;
-  }
-});
-
-var methods = ['read', 'update', 'delete'];
-methods.forEach(function(fn) {
-  Resource.prototype[fn] = function() {
-    this.methods[fn] = Crud[fn];
-    return this;
-  }
-});
-
-Resource.prototype.crud = function crud() {
-  var fns = methods.concat(statics);
-  fns.forEach(function(fn) {
-    this[fn]();
-  }, this);
-  return this;
-}
-
 
 module.exports = Customer = {};
 Customer.Api = Api;
