@@ -4,7 +4,8 @@
   "description": "API library generator",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "build": "node bin/customer.js example.js"
   },
   "repository": {
     "type": "git",

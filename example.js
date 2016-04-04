@@ -2,6 +2,8 @@
 var customer = require('customer');
 var Api = customer.Api;
 var Resource = customer.Resource;
+var Action = customer.Action;
+var Crud = customer.Util.Crud;
 
 var Github = Api('github', {
   baseUrl: 'https://api.github.com/v3',
@@ -19,20 +21,25 @@ var Org = Resource('org', {});
 var Repo = Resource('repo', {});
 
 User
-  .belongsTo(Org)
+  .hasOne(Org)
   .hasMany(Repo)
-  .read()
-  .update();
+  .method(Crud.read)
+  .method(Crud.update);
+
+var Refund = Action('refund', 'post', 'refund', {});
 
 Org
-  .belongsTo(User)
+  .hasOne(User, 'owner')
   .hasMany(User)
   .hasMany(Repo)
   .method(Crud.create)
   .method(Refund, 'refund')
-  .crud();
+  .use(Crud);
 
-Repo.crud();
+Repo.use(Crud);
 
-module.exports = Github.hasMany([User, Org, Repo]);
+module.exports = Github
+  .resource(User)
+  .resource(Org)
+  .resource(Repo);
 

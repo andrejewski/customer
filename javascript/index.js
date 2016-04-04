@@ -19,7 +19,7 @@ module.exports = function build(dest, api) {
 
     writes.push(template('index', path.join(dest, 'index.js')));
     api.resources.forEach(function(resource) {
-      var filepath = path.join(dest, 'resources', resource.noun+'.js');
+      var filepath = path.join(dest, 'resources', resource.name+'.js');
       writes.push(template('resource', filepath, {resource: resource}));
     });
 

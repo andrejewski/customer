@@ -15,10 +15,22 @@ function compileAction(action) {
 function compileResource(resource, recurse) {
   var obj = resource.toObject();
   if(recurse) {
-    obj.parents = obj.parents.map(compileResource);
-    obj.children = obj.children.map(compileResource);
-    obj.statics = obj.statics.map(compileAction);
-    obj.methods = obj.methods.map(compileAction);
+    obj.singleRelations = obj.singleRelations.map(function(relation) {
+      relation.resource = compileResource(relation.resource);
+      return relation;
+    });
+    obj.multipleRelations = obj.multipleRelations.map(function(relation) {
+      relation.resource = compileResource(relation.resource);
+      return relation;
+    });
+    obj.statics = obj.statics.map(function(actor) {
+      actor.action = compileAction(actor.action);
+      return actor;
+    });
+    obj.methods = obj.methods.map(function(actor) {
+      actor.action = compileAction(actor.action);
+      return actor;
+    });
   }
   return obj;
 }

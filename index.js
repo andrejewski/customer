@@ -42,7 +42,7 @@ Api.prototype.resource = function(resource) {
     .filter(function(x) {return x.name === resource.name})
     .pop();
   if(existing) {
-    var msg = 'Api '+this.name+'.resource('+resource.name+') conflicts with another resource named "'+existing name+'".';
+    var msg = 'Api '+this.name+'.resource('+resource.name+') conflicts with another resource named "'+existing.name+'".';
     throw new Error(msg);
   }
   this.resources.push(resource);
@@ -58,7 +58,7 @@ Api.prototype.action = function(action) {
     .filter(function(x) {return x.name === action.name})
     .pop();
   if(existing) {
-    var msg = 'Api '+this.name+'.action('+action.name+') conflicts with another action named "'+existing name+'".';
+    var msg = 'Api '+this.name+'.action('+action.name+') conflicts with another action named "'+existing.name+'".';
     throw new Error(msg);
   }
   this.actions.push(action);
@@ -81,7 +81,7 @@ function Action(name, method, verb, options) {
   this.name = name;
   this.method = method;
   this.verb = verb;
-  this.options = options;
+  this.options = options || {};
 }
 
 Action.prototype.toObject = function() {
@@ -160,7 +160,7 @@ Resource.prototype._addRelation = function addRelation(prop, func, resource, nam
   }
 
   var existing = this[prop]
-    .filter(function(x) {return x.name === name});
+    .filter(function(x) {return x.name === name})
     .pop();
   if(existing) {
     var msg = 'Conflicting '+this.name+'.'+func+'('+resource.name+', '+name+') relation with name "'+name+'".';
